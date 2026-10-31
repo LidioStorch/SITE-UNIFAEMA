@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal</title>
+<style>
+  :root {
+    --fundo: #eef1f5;
+    --cartao: #ffffff;
+    --texto: #1f2937;
+    --texto-suave: #6b7280;
+    --primaria: #1e5aa8;
+    --primaria-escura: #174680;
+    --borda: #d1d5db;
+    --erro: #b91c1c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .cartao {
+    width: 100%;
+    max-width: 400px;
+    background: var(--cartao);
+    border-radius: 8px;
+    padding: 32px 28px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    text-align: center;
+  }
+  .logo { max-width: 180px; height: auto; margin-bottom: 20px; }
+  h2 { font-size: 1.1rem; font-weight: 600; margin: 0 0 20px; }
+  label { display: block; text-align: left; font-size: 0.85rem; margin-bottom: 4px; color: var(--texto-suave); }
+  input, select {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    border: 1px solid var(--borda);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: #fff;
+    color: var(--texto);
+  }
+  input:focus, select:focus, button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--primaria);
+    outline-offset: 2px;
+  }
+  .dica { display: none; text-align: left; font-size: 0.85rem; color: var(--erro); margin: -6px 0 14px; }
+  .dica.visivel { display: block; }
+  .dica.sucesso { color: #15803d; }
+  .botao:disabled { opacity: 0.6; cursor: wait; }
+  .botao {
+    width: 100%;
+    padding: 11px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--primaria);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .botao:hover { background: var(--primaria-escura); }
+  .esqueci { display: inline-block; margin-top: 16px; font-size: 0.9rem; color: var(--primaria); }
+  .cookies {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 14px 20px;
+    background: #111827;
+    color: #fff;
+    font-size: 0.85rem;
+  }
+  .cookies a { color: #93c5fd; }
+  .cookies button {
+    padding: 8px 18px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--primaria);
+    color: #fff;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+  <main class="cartao">
+    <img class="logo" src="imagens/faema.png" alt="UNIFAEMA">
+    <h2>Acesse seu portal:</h2>
+
+    <form id="form-login" novalidate>
+      <label for="usuario">Usuário</label>
+      <input id="usuario" type="text" autocomplete="username">
+
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" autocomplete="current-password">
+
+      <label for="instituicao">Instituição</label>
+      <select id="instituicao">
+        <option>CENTRO UNIVERSITÁRIO FAEMA (UNIFAEMA)</option>
+        <option>CENTRO UNIVERSITÁRIO FAEMA (UNIFAEMA) - EAD</option>
+      </select>
+
+      <div class="dica" id="dica" role="alert"></div>
+
+      <button class="botao" id="botao" type="submit">Acessar</button>
+    </form>
+
+    <a class="esqueci" href="#">Esqueceu sua senha?</a>
+  </main>
+
+  <div class="cookies" id="cookies">
+    <span>Usamos cookies para melhorar a experiência do usuário. Ao continuar navegando, você concorda com o uso deles.
+      <a href="#">Política de Privacidade e Cookies</a></span>
+    <button type="button" id="aceitar">Aceitar</button>
+  </div>
+
+<script>
+  document.getElementById('aceitar').addEventListener('click', function () {
+    document.getElementById('cookies').style.display = 'none';
+  });
+
+  var dica = document.getElementById('dica');
+  var botao = document.getElementById('botao');
+
+  function mostrarAviso(texto, sucesso) {
+    dica.textContent = texto;
+    dica.classList.add('visivel');
+    dica.classList.toggle('sucesso', !!sucesso);
+  }
+
+  document.getElementById('form-login').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    dica.classList.remove('visivel');
+    botao.disabled = true;
+
+    try {
+      var resposta = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario: document.getElementById('usuario').value,
+          senha: document.getElementById('senha').value
+        })
+      });
+      var dados = await resposta.json();
+
+      if (resposta.ok) {
+        window.location.href = '/portal';
+      } else {
+        mostrarAviso(dados.erro || 'Não foi possível entrar.');
+      }
+    } catch (erro) {
+      mostrarAviso('Não foi possível falar com o servidor. Ele está ligado?');
+    } finally {
+      botao.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
