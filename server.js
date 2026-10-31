@@ -12,7 +12,7 @@ const { DatabaseSync } = require('node:sqlite');
 const app = express();
 const PORTA = Number(process.env.PORT || 3000);
 const PERFIS = ['aluno', 'admin'];
-const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
 const CAMPOS_PERFIL = ['email', 'cpf', 'estado_natal', 'cidade_natal', 'telefone', 'nome_mae',
   'cep', 'pais', 'uf', 'cidade', 'tipo_logradouro', 'logradouro', 'numero', 'bairro', 'complemento'];
 
@@ -74,7 +74,8 @@ const DISCIPLINAS = [
 ];
 
 // ---------- Banco de dados ----------
-const db = new DatabaseSync(path.join(__dirname, 'banco.db'));
+const caminhoBanco = process.env.DB_PATH || path.join(__dirname, 'banco.db');
+const db = new DatabaseSync(caminhoBanco);
 db.exec('PRAGMA foreign_keys = ON;');
 
 db.exec(`
@@ -372,7 +373,7 @@ function validarPerfil(d) {
   if (!d.pais) return 'Selecione o país.';
   if (!UFS.includes(d.uf)) return 'Selecione o estado do endereço.';
   const obrigatorios = [['cidade', 'a cidade'], ['tipo_logradouro', 'o tipo de logradouro'],
-    ['logradouro', 'o logradouro'], ['numero', 'o número'], ['bairro', 'o bairro']];
+  ['logradouro', 'o logradouro'], ['numero', 'o número'], ['bairro', 'o bairro']];
   for (const [campo, nome] of obrigatorios) {
     if (!d[campo]) return 'Informe ' + nome + '.';
   }
