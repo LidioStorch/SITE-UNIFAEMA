@@ -1,0 +1,17 @@
+{
+  "name": "site-unifaema",
+  "version": "1.0.0",
+  "description": "Portal acadêmico com login, administração, cursos, períodos e disciplinas",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disciplinas - Portal</title>
+<link rel="stylesheet" href="/tema.css">
+<style>[hidden] { display: none !important; }</style>
+</head>
+<body data-pagina="Disciplinas">
+<main class="conteudo" id="conteudo">
+  <h1>Disciplinas</h1>
+  <section class="painel">
+    <p id="resumo-academico" aria-live="polite">Carregando suas disciplinas...</p>
+    <div id="filtros-admin" class="form-grade" hidden>
+      <div class="campo">
+        <label for="filtro-curso">Curso</label>
+        <select id="filtro-curso"><option value="">Todos os cursos</option></select>
+      </div>
+      <div class="campo">
+        <label for="filtro-periodo">Período</label>
+        <select id="filtro-periodo"><option value="">Todos os períodos</option></select>
+      </div>
+      <div class="campo acao">
+        <button class="botao" id="btn-filtrar" type="button">Filtrar</button>
+      </div>
+    </div>
+    <div id="mensagem" class="msg" role="status"></div>
+    <div id="semestres"></div>
+    <p><small>As informações exibidas correspondem à grade cadastrada. Notas e frequência só aparecerão quando esses dados forem cadastrados no sistema.</small></p>
+  </section>
+</main>
+<script>
+(function () {
+  var raiz = document.getElementById('semestres');
+  var resumo = document.getElementById('resumo-academico');
+  var mensagem = document.getElementById('mensagem');
+  var filtros = document.getElementById('filtros-admin');
+  var filtroCurso = document.getElementById('filtro-curso');
+  var filtroPeriodo = document.getElementById('filtro-periodo');
+  var eu = null;
+  var cursos = [];
+
+  function el(tag, classe, texto) {
+    var e = document.createElement(tag);
+    if (classe) e.className = classe;
+    if (texto !== undefined && texto !== null) e.textContent = texto;
+    return e;
+  }
+  function mostrar(texto, erro) {
+    mensagem.textContent = texto || '';
+    mensagem.className = texto ? ('msg visivel ' + (erro ? 'erro' : 'ok')) : 'msg';
+  }
+  async function api(url) {
+    var r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    var d = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(d.erro || 'Não foi possível carregar os dados.');
+    return d;
+  }
+  function preencherPeriodos() {
+    for (var i = 1; i <= 20; i++) {
+      var op = document.createElement('option');
+      op.value = String(i);
+      op.textContent = i + 'º período';
+      filtroPeriodo.appendChild(op);
+    }
+  }
+  function agrupar(lista) {
+    var grupos = {};
+    lista.forEach(function (d) {
+      var chave = d.periodo + '-' + d.semestre + (d.curso ? '-' + d.curso : '');
+      if (!grupos[chave]) grupos[chave] = { periodo: d.periodo, semestre: d.semestre, curso: d.curso, disciplinas: [] };
+      grupos[chave].disciplinas.push(d);
+    });
+    return Object.keys(grupos).map(function (k) { return grupos[k]; }).sort(function (a, b) {
+      return a.periodo - b.periodo || a.semestre - b.semestre || String(a.curso || '').localeCompare(String(b.curso || ''));
+    });
+  }
+  function renderizar(lista) {
+    raiz.textContent = '';
+    if (!lista.length) {
+      raiz.appendChild(el('p', '', 'Nenhuma disciplina encontrada para este acesso ou filtro.'));
+      return;
+    }
+    agrupar(lista).forEach(function (grupo) {
+      var titulo = (grupo.semestre || 1) + 'º SEMESTRE — ' + grupo.periodo + 'º PERÍODO';
+      if (grupo.curso) titulo += ' — ' + grupo.curso.toUpperCase();
+      var bloco = el('details', 'acordeao');
+      bloco.open = true;
+      bloco.appendChild(el('summary', '', titulo));
+      var corpoGrupo = el('div', 'corpo');
+      grupo.disciplinas.sort(function (a, b) { return a.nome.localeCompare(b.nome); }).forEach(function (d) {
+        var item = el('details', 'acordeao');
+        item.appendChild(el('summary', '', d.nome));
+        var corpo = el('div', 'corpo');
+        var grade = el('div', 'detalhe');
+        function campo(rotulo, valor) {
+          var c = el('div');
+          c.appendChild(el('small', '', rotulo));
+          c.appendChild(el('b', '', valor || 'Não informado'));
+          return c;
+        }
+        grade.appendChild(campo('Professor(a)', d.professor));
+        grade.appendChild(campo('Carga horária', d.carga_horaria + ' horas'));
+        if (eu && eu.perfil === 'admin') {
+          grade.appendChild(campo('Curso', d.curso));
+          grade.appendChild(campo('Período', d.periodo + 'º'));
+        }
+        corpo.appendChild(grade);
+        item.appendChild(corpo);
+        corpoGrupo.appendChild(item);
+      });
+      bloco.appendChild(corpoGrupo);
+      raiz.appendChild(bloco);
+    });
+  }
+  async function carregar() {
+    mostrar('', false);
+    raiz.textContent = '';
+    try {
+      if (!eu) eu = await api('/api/me');
+      var url = '/api/disciplinas';
+      if (eu.perfil === 'admin') {
+        filtros.hidden = false;
+        var params = new URLSearchParams();
+        if (filtroCurso.value) params.set('cursoId', filtroCurso.value);
+        if (filtroPeriodo.value) params.set('periodo', filtroPeriodo.value);
+        if (params.toString()) url += '?' + params.toString();
+      }
+      var dados = await api(url);
+      var disciplinaLista = dados.disciplinas || [];
+      if (eu.perfil === 'aluno') {
+        var nomeCurso = dados.curso || eu.curso || 'Curso não vinculado';
+        var periodos = (dados.periodos || eu.periodos || []).map(function (p) { return p + 'º'; }).join(' e ');
+        resumo.textContent = nomeCurso + (periodos ? ' • Acesso aos períodos ' + periodos : '');
+      } else {
+        resumo.textContent = 'Visualização administrativa da grade cadastrada (' + disciplinaLista.length + ' disciplinas).';
+      }
+      renderizar(disciplinaLista);
+    } catch (e) {
+      resumo.textContent = '';
+      mostrar(e.message, true);
+    }
+  }
+  async function iniciar() {
+    preencherPeriodos();
+    try {
+      eu = await api('/api/me');
+      if (eu.perfil === 'admin') {
+        cursos = await api('/api/admin/cursos');
+        cursos.forEach(function (c) {
+          var op = document.createElement('option');
+          op.value = c.id; op.textContent = c.nome; filtroCurso.appendChild(op);
+        });
+        document.getElementById('btn-filtrar').addEventListener('click', carregar);
+        filtroCurso.addEventListener('change', carregar);
+        filtroPeriodo.addEventListener('change', carregar);
+      }
+      carregar();
+    } catch (e) { mostrar(e.message, true); }
+  }
+  iniciar();
+})();
+</script>
+<script src="/portal.js"></script>
+</body>
+</html>

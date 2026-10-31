@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administração - Portal</title>
+<link rel="stylesheet" href="/tema.css">
+<style>[hidden] { display: none !important; }</style>
+</head>
+<body data-pagina="Administração">
+<main class="conteudo" id="conteudo">
+  <h1>Administração</h1>
+
+  <section class="painel">
+    <h2>Novo usuário</h2>
+    <form id="form-novo" class="form-grade" novalidate>
+      <div class="campo"><label for="f-usuario">Usuário (login)</label><input id="f-usuario" type="text" autocomplete="off" maxlength="30" required></div>
+      <div class="campo"><label for="f-nome">Nome completo</label><input id="f-nome" type="text" autocomplete="off" maxlength="80" required></div>
+      <div class="campo"><label for="f-matricula">RA / Matrícula</label><input id="f-matricula" type="text" autocomplete="off" maxlength="20" required></div>
+      <div class="campo"><label for="f-senha">Senha temporária (mínimo 8 caracteres)</label><input id="f-senha" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="campo"><label for="f-perfil">Perfil</label><select id="f-perfil"><option value="aluno">Aluno</option><option value="admin">Administrador</option></select></div>
+      <div id="dados-academicos-novo" class="campo largo">
+        <h3>Vínculo acadêmico do aluno</h3>
+        <div class="form-grade">
+          <div class="campo"><label for="f-curso">Curso</label><select id="f-curso" required></select></div>
+          <div class="campo"><label for="f-periodo">Período atual</label><select id="f-periodo" required></select></div>
+        </div>
+        <p><strong>Períodos liberados no portal</strong></p>
+        <div id="f-periodos" class="form-grade"></div>
+        <small>Por padrão, o sistema marca o período atual e o anterior. Você pode ajustar a seleção.</small>
+      </div>
+      <div class="campo acao"><button class="botao" type="submit">Criar usuário</button></div>
+    </form>
+    <div class="msg" id="msg" role="alert"></div>
+  </section>
+
+  <section class="painel">
+    <h2>Usuários cadastrados</h2>
+    <div class="tabela-rolagem"><table>
+      <thead><tr><th>Login</th><th>Nome</th><th>RA</th><th>Perfil</th><th>Curso</th><th>Período</th><th>Ações</th></tr></thead>
+      <tbody id="lista-usuarios"></tbody>
+    </table></div>
+  </section>
+
+  <section class="painel">
+    <h2>Vincular ou alterar curso e período</h2>
+    <form id="form-vinculo" class="form-grade">
+      <div class="campo"><label for="a-aluno">Aluno</label><select id="a-aluno" required></select></div>
+      <div class="campo"><label for="a-curso">Curso</label><select id="a-curso" required></select></div>
+      <div class="campo"><label for="a-periodo">Período atual</label><select id="a-periodo" required></select></div>
+      <div class="campo largo"><label>Períodos liberados</label><div id="a-periodos" class="form-grade"></div></div>
+      <div class="campo acao"><button class="botao" type="submit">Salvar vínculo</button></div>
+    </form>
+    <div class="msg" id="msg-vinculo" role="status"></div>
+  </section>
+
+  <section class="painel">
+    <h2>Cadastro e manutenção de disciplinas</h2>
+    <form id="form-disciplina" class="form-grade" novalidate>
+      <input id="d-id" type="hidden">
+      <div class="campo"><label for="d-curso">Curso</label><select id="d-curso" required></select></div>
+      <div class="campo"><label for="d-periodo">Período</label><select id="d-periodo" required></select></div>
+      <div class="campo"><label for="d-semestre">Semestre</label><select id="d-semestre"><option value="1">1º semestre</option><option value="2">2º semestre</option></select></div>
+      <div class="campo"><label for="d-carga">Carga horária (horas)</label><input id="d-carga" type="number" min="1" max="2000" required></div>
+      <div class="campo largo"><label for="d-nome">Nome da disciplina</label><input id="d-nome" type="text" maxlength="120" required></div>
+      <div class="campo largo"><label for="d-professor">Professor(a)</label><input id="d-professor" type="text" maxlength="120" required></div>
+      <div class="campo acao"><button class="botao" id="d-salvar" type="submit">Cadastrar disciplina</button><button class="botao" id="d-cancelar" type="button" hidden>Cancelar edição</button></div>
+    </form>
+    <div class="msg" id="msg-disciplina" role="status"></div>
+    <div class="tabela-rolagem"><table>
+      <thead><tr><th>Curso</th><th>Período</th><th>Semestre</th><th>Disciplina</th><th>Carga</th><th>Professor(a)</th><th>Ações</th></tr></thead>
+      <tbody id="lista-disciplinas"></tbody>
+    </table></div>
+  </section>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var cursos = [], alunos = [], disciplinas = [], usuarioAtual = null;
+  var periodosMax = 20;
+
+  async function api(url, opcoes) {
+    var cfg = Object.assign({ headers: { 'Content-Type': 'application/json' } }, opcoes || {});
+    var r = await fetch(url, cfg);
+    var d = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(d.erro || 'Não foi possível concluir a operação.');
+    return d;
+  }
+  function mostrar(id, texto, ok) {
+    var m = $(id); m.textContent = texto || '';
+    m.className = texto ? ('msg visivel ' + (ok ? 'ok' : 'erro')) : 'msg';
+  }
+  function celula(texto) { var td = document.createElement('td'); td.textContent = texto == null || texto === '' ? '-' : String(texto); return td; }
+  function botao(texto, classe, acao) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'botao ' + (classe || '');
+    b.textContent = texto; b.addEventListener('click', acao); return b;
+  }
+  function carregarOpcoes(select, primeiro) {
+    select.textContent = '';
+    if (primeiro) { var op0 = document.createElement('option'); op0.value = ''; op0.textContent = primeiro; select.appendChild(op0); }
+    for (var i = 1; i <= periodosMax; i++) { var op = document.createElement('option'); op.value = String(i); op.textContent = i + 'º período'; select.appendChild(op); }
+  }
+  function preencherCursos(select) {
+    select.textContent = '';
+    cursos.forEach(function (c) { var op = document.createElement('option'); op.value = c.id; op.textContent = c.nome; select.appendChild(op); });
+  }
+  function marcarPeriodos(container, selecionados, prefixo) {
+    container.textContent = '';
+    for (var i = 1; i <= periodosMax; i++) {
+      var label = document.createElement('label'); label.className = 'check'; label.style.display = 'inline-flex'; label.style.marginRight = '12px';
+      var input = document.createElement('input'); input.type = 'checkbox'; input.value = String(i); input.name = prefixo + '-periodo';
+      input.checked = (selecionados || []).map(Number).indexOf(i) !== -1;
+      label.appendChild(input); var span = document.createElement('span'); span.textContent = i + 'º'; label.appendChild(span); container.appendChild(label);
+    }
+  }
+  function obterPeriodos(container) {
+    return Array.prototype.slice.call(container.querySelectorAll('input[type="checkbox"]:checked')).map(function (x) { return Number(x.value); });
+  }
+  function padraoPeriodos(periodo) { return periodo > 1 ? [periodo - 1, periodo] : [1]; }
+  function atualizarPeriodosNovo() { marcarPeriodos($('f-periodos'), padraoPeriodos(Number($('f-periodo').value) || 1), 'novo'); }
+  function atualizarPeriodosVinculo(periodos) { marcarPeriodos($('a-periodos'), periodos || padraoPeriodos(Number($('a-periodo').value) || 1), 'vinculo'); }
+  function alternarCamposAcademicos() { $('dados-academicos-novo').hidden = $('f-perfil').value !== 'aluno'; }
+
+  async function carregarUsuarios() {
+    var lista = await api('/api/admin/usuarios');
+    var corpo = $('lista-usuarios'); corpo.textContent = '';
+    lista.forEach(function (u) {
+      var tr = document.createElement('tr');
+      tr.appendChild(celula(u.usuario)); tr.appendChild(celula(u.nome)); tr.appendChild(celula(u.matricula));
+      tr.appendChild(celula(u.perfil === 'admin' ? 'Administrador' : 'Aluno'));
+      tr.appendChild(celula(u.curso)); tr.appendChild(celula(u.periodo_atual ? u.periodo_atual + 'º' : '-'));
+      var acoes = document.createElement('td'); acoes.className = 'acoes';
+      acoes.appendChild(botao('Trocar senha', '', function () { trocarSenha(u); }));
+      var excluir = botao('Excluir', 'perigo', function () { excluirUsuario(u); });
+      if (usuarioAtual && usuarioAtual.id === u.id) { excluir.disabled = true; excluir.title = 'Você não pode excluir seu próprio usuário.'; }
+      acoes.appendChild(excluir); tr.appendChild(acoes); corpo.appendChild(tr);
+    });
+  }
+  async function trocarSenha(u) {
+    var nova = window.prompt('Digite a nova senha temporária para ' + u.nome + ' (mínimo 8 caracteres):');
+    if (nova === null) return;
+    try { await api('/api/admin/usuarios/' + u.id + '/senha', { method: 'PUT', body: JSON.stringify({ senha: nova }) });
+      mostrar('msg', 'Senha redefinida. O usuário deverá alterá-la no próximo acesso.', true);
+    } catch (e) { mostrar('msg', e.message, false); }
+  }
+  async function excluirUsuario(u) {
+    if (!window.confirm('Excluir o usuário ' + u.nome + '? Esta ação não pode ser desfeita.')) return;
+    try { await api('/api/admin/usuarios/' + u.id, { method: 'DELETE' }); await recarregarAlunos(); await carregarUsuarios(); mostrar('msg', 'Usuário excluído.', true); }
+    catch (e) { mostrar('msg', e.message, false); }
+  }
+  async function recarregarAlunos() {
+    alunos = await api('/api/admin/alunos');
+    var sel = $('a-aluno'); sel.textContent = '';
+    var vazio = document.createElement('option'); vazio.value = ''; vazio.textContent = '-- Selecione um aluno --'; sel.appendChild(vazio);
+    alunos.forEach(function (a) { var op = document.createElement('option'); op.value = a.usuario_id; op.textContent = a.nome + ' (' + a.matricula + ')'; sel.appendChild(op); });
+    if (alunos.length) preencherVinculo(alunos[0].usuario_id);
+  }
+  function preencherVinculo(id) {
+    var a = alunos.find(function (x) { return String(x.usuario_id) === String(id); });
+    if (!a) return;
+    $('a-curso').value = String(a.curso_id); $('a-periodo').value = String(a.periodo_atual);
+    atualizarPeriodosVinculo(a.periodos);
+  }
+  async function recarregarDisciplinas() {
+    disciplinas = await api('/api/admin/disciplinas');
+    var corpo = $('lista-disciplinas'); corpo.textContent = '';
+    disciplinas.forEach(function (d) {
+      var tr = document.createElement('tr');
+      tr.appendChild(celula(d.curso)); tr.appendChild(celula(d.periodo + 'º'));
+      tr.appendChild(celula(d.semestre + 'º')); tr.appendChild(celula(d.nome));
+      tr.appendChild(celula(d.cargaHoraria + 'h')); tr.appendChild(celula(d.professor));
+      var acoes = document.createElement('td'); acoes.className = 'acoes';
+      acoes.appendChild(botao('Editar', '', function () { editarDisciplina(d); }));
+      acoes.appendChild(botao('Excluir', 'perigo', function () { excluirDisciplina(d); }));
+      tr.appendChild(acoes); corpo.appendChild(tr);
+    });
+  }
+  function editarDisciplina(d) {
+    $('d-id').value = d.id; $('d-curso').value = String(d.cursoId); $('d-periodo').value = String(d.periodo);
+    $('d-semestre').value = String(d.semestre); $('d-nome').value = d.nome;
+    $('d-carga').value = d.cargaHoraria; $('d-professor').value = d.professor;
+    $('d-salvar').textContent = 'Salvar alterações'; $('d-cancelar').hidden = false;
+    $('form-disciplina').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function limparDisciplina() { $('form-disciplina').reset(); $('d-id').value = ''; $('d-salvar').textContent = 'Cadastrar disciplina'; $('d-cancelar').hidden = true; }
+  async function excluirDisciplina(d) {
+    if (!window.confirm('Excluir a disciplina ' + d.nome + '?')) return;
+    try { await api('/api/admin/disciplinas/' + d.id, { method: 'DELETE' }); await recarregarDisciplinas(); mostrar('msg-disciplina', 'Disciplina excluída.', true); }
+    catch (e) { mostrar('msg-disciplina', e.message, false); }
+  }
+
+  $('f-periodo').addEventListener('change', atualizarPeriodosNovo);
+  $('a-periodo').addEventListener('change', function () { atualizarPeriodosVinculo(padraoPeriodos(Number($('a-periodo').value) || 1)); });
+  $('f-perfil').addEventListener('change', alternarCamposAcademicos);
+  $('a-aluno').addEventListener('change', function () { preencherVinculo(this.value); });
+  $('form-novo').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var dados = { usuario: $('f-usuario').value.trim(), nome: $('f-nome').value.trim(), matricula: $('f-matricula').value.trim(), senha: $('f-senha').value, perfil: $('f-perfil').value };
+    if (dados.perfil === 'aluno') {
+      dados.cursoId = Number($('f-curso').value); dados.periodoAtual = Number($('f-periodo').value); dados.periodos = obterPeriodos($('f-periodos'));
+      if (!dados.periodos.length || dados.periodos.indexOf(dados.periodoAtual) === -1) { mostrar('msg', 'Inclua o período atual na lista de períodos liberados.', false); return; }
+    }
+    try { await api('/api/admin/usuarios', { method: 'POST', body: JSON.stringify(dados) });
+      mostrar('msg', 'Usuário criado com vínculo acadêmico. A senha será temporária.', true); e.target.reset();
+      $('f-perfil').value = 'aluno'; alternarCamposAcademicos(); atualizarPeriodosNovo(); await carregarUsuarios(); await recarregarAlunos();
+    } catch (err) { mostrar('msg', err.message, false); }
+  });
+  $('form-vinculo').addEventListener('submit', async function (e) {
+    e.preventDefault(); var id = $('a-aluno').value;
+    if (!id) { mostrar('msg-vinculo', 'Selecione um aluno.', false); return; }
+    var periodos = obterPeriodos($('a-periodos'));
+    var periodoAtual = Number($('a-periodo').value);
+    if (!periodos.length || periodos.indexOf(periodoAtual) === -1) { mostrar('msg-vinculo', 'Inclua o período atual na lista liberada.', false); return; }
+    try { await api('/api/admin/alunos/' + id, { method: 'PUT', body: JSON.stringify({ cursoId: Number($('a-curso').value), periodoAtual: periodoAtual, periodos: periodos }) });
+      mostrar('msg-vinculo', 'Vínculo acadêmico atualizado.', true); await recarregarAlunos(); await carregarUsuarios();
+    } catch (e2) { mostrar('msg-vinculo', e2.message, false); }
+  });
+  $('form-disciplina').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var id = $('d-id').value;
+    var dados = { cursoId: Number($('d-curso').value), periodo: Number($('d-periodo').value), semestre: Number($('d-semestre').value), nome: $('d-nome').value.trim(), cargaHoraria: Number($('d-carga').value), professor: $('d-professor').value.trim() };
+    try { await api(id ? '/api/admin/disciplinas/' + id : '/api/admin/disciplinas', { method: id ? 'PUT' : 'POST', body: JSON.stringify(dados) });
+      mostrar('msg-disciplina', id ? 'Disciplina atualizada.' : 'Disciplina cadastrada.', true); limparDisciplina(); await recarregarDisciplinas();
+    } catch (e2) { mostrar('msg-disciplina', e2.message, false); }
+  });
+  $('d-cancelar').addEventListener('click', limparDisciplina);
+
+  async function iniciar() {
+    try {
+      usuarioAtual = await api('/api/me');
+      cursos = await api('/api/admin/cursos');
+      preencherCursos($('f-curso')); preencherCursos($('a-curso')); preencherCursos($('d-curso'));
+      carregarOpcoes($('f-periodo'), null); carregarOpcoes($('a-periodo'), null); carregarOpcoes($('d-periodo'), null);
+      $('f-periodo').value = '1'; $('a-periodo').value = '1'; $('d-periodo').value = '1';
+      alternarCamposAcademicos(); atualizarPeriodosNovo(); atualizarPeriodosVinculo([1]);
+      await Promise.all([carregarUsuarios(), recarregarAlunos(), recarregarDisciplinas()]);
+    } catch (e) { mostrar('msg', e.message, false); }
+  }
+  iniciar();
+})();
+</script>
+<script src="/portal.js"></script>
+</body>
+</html>

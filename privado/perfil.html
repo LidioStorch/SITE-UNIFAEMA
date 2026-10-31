@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perfil - Portal</title>
+<link rel="stylesheet" href="/tema.css">
+<style>[hidden] { display: none !important; }</style>
+</head>
+<body data-pagina="Perfil">
+<main class="conteudo" id="conteudo">
+  <h1>Perfil</h1>
+  <div id="aviso-senha-temporaria" class="msg visivel alerta" role="status" hidden>
+    Sua senha é temporária. Antes de acessar as disciplinas, crie uma nova senha com pelo menos 8 caracteres.
+  </div>
+  <form id="form-perfil" class="painel" novalidate>
+
+    <fieldset>
+      <legend>Dados do perfil</legend>
+      <div class="form-grade">
+        <div class="campo">
+          <label>Foto</label>
+          <div class="avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.5 3.5-7 8-7s8 2.5 8 7"/></svg>
+          </div>
+        </div>
+        <div class="campo largo">
+          <label for="f-nome">Nome completo</label>
+          <input id="f-nome" type="text" readonly>
+        </div>
+        <div class="campo">
+          <label for="f-matricula">Matrícula</label>
+          <input id="f-matricula" type="text" readonly>
+        </div>
+        <div class="campo">
+          <label for="f-email">E-mail</label>
+          <input id="f-email" type="email" maxlength="120" required autocomplete="off">
+        </div>
+        <div class="campo">
+          <label for="f-cpf">CPF</label>
+          <input id="f-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" required autocomplete="off">
+        </div>
+        <div class="campo">
+          <label for="f-estado-natal">Estado natal</label>
+          <select id="f-estado-natal" required></select>
+        </div>
+        <div class="campo">
+          <label for="f-cidade-natal">Cidade natal / Naturalidade</label>
+          <input id="f-cidade-natal" type="text" maxlength="80" required>
+        </div>
+        <div class="campo">
+          <label for="f-telefone">Telefone celular</label>
+          <input id="f-telefone" type="text" inputmode="tel" placeholder="(00) 90000-0000" required autocomplete="off">
+        </div>
+        <div class="campo largo">
+          <label for="f-mae">Nome da mãe</label>
+          <input id="f-mae" type="text" maxlength="80" required autocomplete="off">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Endereço</legend>
+      <div class="form-grade">
+        <div class="campo">
+          <label for="f-cep">CEP</label>
+          <input id="f-cep" type="text" inputmode="numeric" placeholder="00000-000" required autocomplete="off">
+        </div>
+        <div class="campo">
+          <label for="f-pais">País</label>
+          <select id="f-pais" required></select>
+        </div>
+        <div class="campo">
+          <label for="f-uf">Estado</label>
+          <select id="f-uf" required></select>
+        </div>
+        <div class="campo">
+          <label for="f-cidade">Cidade</label>
+          <input id="f-cidade" type="text" maxlength="80" required>
+        </div>
+        <div class="campo">
+          <label for="f-tipo">Tipo de logradouro</label>
+          <select id="f-tipo" required></select>
+        </div>
+        <div class="campo largo">
+          <label for="f-logradouro">Logradouro</label>
+          <input id="f-logradouro" type="text" maxlength="100" required>
+        </div>
+        <div class="campo">
+          <label for="f-numero">Número</label>
+          <input id="f-numero" type="text" maxlength="10" required>
+        </div>
+        <div class="campo">
+          <label for="f-bairro">Bairro</label>
+          <input id="f-bairro" type="text" maxlength="60" required>
+        </div>
+        <div class="campo largo">
+          <label for="f-complemento">Complemento</label>
+          <input id="f-complemento" type="text" maxlength="60">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Trocar senha (deixe em branco para manter a atual)</legend>
+      <div class="form-grade">
+        <div class="campo">
+          <label for="f-senha-atual">Senha atual</label>
+          <input id="f-senha-atual" type="password" autocomplete="current-password">
+        </div>
+        <div class="campo">
+          <label for="f-senha-nova">Nova senha</label>
+          <input id="f-senha-nova" type="password" autocomplete="new-password">
+        </div>
+        <div class="campo">
+          <label for="f-senha-conf">Confirmar nova senha</label>
+          <input id="f-senha-conf" type="password" autocomplete="new-password">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Política de privacidade e cookies</legend>
+      <label class="check">
+        <input id="f-termos" type="checkbox" checked required>
+        <span>Estou ciente e de acordo com as políticas de privacidade, consentindo com a coleta dos dados pessoais presentes neste formulário.</span>
+      </label>
+    </fieldset>
+
+    <button class="botao" type="submit">Salvar</button>
+    <div class="msg" id="msg" role="alert"></div>
+  </form>
+</main>
+
+<script>
+  var ESTADOS = [['AC','ACRE'],['AL','ALAGOAS'],['AP','AMAPÁ'],['AM','AMAZONAS'],['BA','BAHIA'],['CE','CEARÁ'],
+    ['DF','DISTRITO FEDERAL'],['ES','ESPÍRITO SANTO'],['GO','GOIÁS'],['MA','MARANHÃO'],['MT','MATO GROSSO'],
+    ['MS','MATO GROSSO DO SUL'],['MG','MINAS GERAIS'],['PA','PARÁ'],['PB','PARAÍBA'],['PR','PARANÁ'],
+    ['PE','PERNAMBUCO'],['PI','PIAUÍ'],['RJ','RIO DE JANEIRO'],['RN','RIO GRANDE DO NORTE'],
+    ['RS','RIO GRANDE DO SUL'],['RO','RONDÔNIA'],['RR','RORAIMA'],['SC','SANTA CATARINA'],
+    ['SP','SÃO PAULO'],['SE','SERGIPE'],['TO','TOCANTINS']];
+  var PAISES = ['BRASIL','ARGENTINA','BOLÍVIA','PARAGUAI','PERU','PORTUGAL','OUTRO'];
+  var TIPOS = ['RUA','AVENIDA','ALAMEDA','TRAVESSA','RODOVIA','ESTRADA','PRAÇA','QUADRA','OUTRO'];
+  var CAMPOS = [['email','f-email'],['cpf','f-cpf'],['estado_natal','f-estado-natal'],
+    ['cidade_natal','f-cidade-natal'],['telefone','f-telefone'],['nome_mae','f-mae'],['cep','f-cep'],
+    ['pais','f-pais'],['uf','f-uf'],['cidade','f-cidade'],['tipo_logradouro','f-tipo'],
+    ['logradouro','f-logradouro'],['numero','f-numero'],['bairro','f-bairro'],['complemento','f-complemento']];
+  function $(id) { return document.getElementById(id); }
+  function preencherSelect(id, opcoes) {
+    var s = $(id); var vazio = document.createElement('option');
+    vazio.value = ''; vazio.textContent = '--Selecione--'; s.appendChild(vazio);
+    opcoes.forEach(function (o) { var op = document.createElement('option'); op.value = Array.isArray(o) ? o[0] : o; op.textContent = Array.isArray(o) ? o[1] : o; s.appendChild(op); });
+  }
+  preencherSelect('f-estado-natal', ESTADOS); preencherSelect('f-uf', ESTADOS);
+  preencherSelect('f-pais', PAISES); preencherSelect('f-tipo', TIPOS);
+  function soNumeros(v) { return v.replace(/\D/g, ''); }
+  function fmtCpf(v) {
+    var d = soNumeros(v).slice(0, 11), o = d.slice(0, 3);
+    if (d.length > 3) o += '.' + d.slice(3, 6); if (d.length > 6) o += '.' + d.slice(6, 9); if (d.length > 9) o += '-' + d.slice(9); return o;
+  }
+  function fmtTel(v) {
+    var d = soNumeros(v).slice(0, 11); if (d.length < 3) return d;
+    var meio = d.length > 10 ? 5 : 4; var o = '(' + d.slice(0, 2) + ') ' + d.slice(2, 2 + meio);
+    if (d.length > 2 + meio) o += '-' + d.slice(2 + meio); return o;
+  }
+  function fmtCep(v) { var d = soNumeros(v).slice(0, 8); return d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d; }
+  [['f-cpf', fmtCpf], ['f-telefone', fmtTel], ['f-cep', fmtCep]].forEach(function (m) {
+    $(m[0]).addEventListener('input', function (e) { e.target.value = m[1](e.target.value); });
+  });
+  var msg = $('msg'); var senhaTemporaria = false;
+  function mostrar(texto, ok) { msg.textContent = texto; msg.className = 'msg visivel ' + (ok ? 'ok' : 'erro'); }
+  async function api(url, opcoes) {
+    var cfg = Object.assign({ headers: { 'Content-Type': 'application/json' } }, opcoes || {});
+    var r = await fetch(url, cfg); var d = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(d.erro || 'Algo deu errado.'); return d;
+  }
+  function mostrarModoTrocaObrigatoria() {
+    var fieldsets = document.querySelectorAll('#form-perfil fieldset');
+    if (fieldsets.length >= 4) {
+      fieldsets[0].hidden = true; fieldsets[1].hidden = true; fieldsets[2].hidden = false; fieldsets[3].hidden = true;
+      fieldsets[0].disabled = true; fieldsets[1].disabled = true;
+    }
+    $('aviso-senha-temporaria').hidden = false;
+    $('form-perfil').querySelector('button[type="submit"]').textContent = 'Alterar senha e continuar';
+  }
+  api('/api/perfil').then(function (r) {
+    $('f-nome').value = r.nome; $('f-matricula').value = r.matricula || r.usuario;
+    CAMPOS.forEach(function (c) {
+      var v = r.dados[c[0]] || ''; if (c[0] === 'cpf') v = fmtCpf(v);
+      if (c[0] === 'telefone') v = fmtTel(v); if (c[0] === 'cep') v = fmtCep(v); $(c[1]).value = v;
+    });
+    senhaTemporaria = Boolean(r.senha_temporaria);
+    if (senhaTemporaria) mostrarModoTrocaObrigatoria();
+    if (new URLSearchParams(window.location.search).get('trocarSenha') === '1' && senhaTemporaria) $('f-senha-atual').focus();
+  }).catch(function () { mostrar('Não foi possível carregar o perfil.', false); });
+
+  $('form-perfil').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var atual = $('f-senha-atual').value, nova = $('f-senha-nova').value, conf = $('f-senha-conf').value;
+    if (senhaTemporaria) {
+      if (!atual || !nova || !conf) { mostrar('Preencha a senha temporária atual, a nova senha e a confirmação.', false); return; }
+      if (nova.length < 8) { mostrar('A nova senha precisa ter pelo menos 8 caracteres.', false); return; }
+      if (nova !== conf) { mostrar('A confirmação da nova senha não confere.', false); return; }
+      try {
+        await api('/api/perfil/senha', { method: 'PUT', body: JSON.stringify({ senhaAtual: atual, novaSenha: nova, confirmaSenha: conf }) });
+        mostrar('Senha alterada. Agora você já pode acessar suas disciplinas.', true);
+        window.location.href = '/portal/disciplinas';
+      } catch (erro) { mostrar(erro.message, false); }
+      return;
+    }
+
+    if (!e.target.reportValidity()) return;
+    var corpo = {}; CAMPOS.forEach(function (c) { corpo[c[0]] = $(c[1]).value; });
+    try {
+      await api('/api/perfil', { method: 'PUT', body: JSON.stringify(corpo) });
+      if (atual || nova || conf) {
+        await api('/api/perfil/senha', { method: 'PUT', body: JSON.stringify({ senhaAtual: atual, novaSenha: nova, confirmaSenha: conf }) });
+        ['f-senha-atual', 'f-senha-nova', 'f-senha-conf'].forEach(function (id) { $(id).value = ''; });
+        mostrar('Dados e senha salvos.', true);
+      } else { mostrar('Dados salvos.', true); }
+    } catch (erro) { mostrar(erro.message, false); }
+  });
+</script>
+<script src="/portal.js"></script>
+</body>
+</html>

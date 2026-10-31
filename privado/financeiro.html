@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Financeiro - Portal</title>
+<link rel="stylesheet" href="/tema.css">
+</head>
+<body data-pagina="Financeiro">
+<main class="conteudo" id="conteudo">
+  <h1>Financeiro</h1>
+  <div class="resumo">
+    <div class="painel"><small>Mensalidade</small><strong>R$ 1.250,00</strong></div>
+    <div class="painel"><small>Próximo vencimento</small><strong>10/11/2026</strong></div>
+    <div class="painel"><small>Em aberto</small><strong>R$ 1.250,00</strong></div>
+  </div>
+  <section class="painel">
+    <h2>Parcelas (dados)</h2>
+    <div class="tabela-rolagem">
+      <table>
+        <thead>
+          <tr><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Situação</th><th>Ação</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>08/12</td><td>10/09/2026</td><td>R$ 1.250,00</td><td><span class="etiqueta ok">Pago</span></td><td><button class="botao" type="button" data-exemplo="Comprovante">Comprovante</button></td></tr>
+          <tr><td>09/12</td><td>10/10/2026</td><td>R$ 1.250,00</td><td><span class="etiqueta ok">Pago</span></td><td><button class="botao" type="button" data-exemplo="Comprovante">Comprovante</button></td></tr>
+          <tr><td>10/12</td><td>10/11/2026</td><td>R$ 1.250,00</td><td><span class="etiqueta alerta">Em aberto</span></td><td><button class="botao" type="button" data-exemplo="Gerar boleto">Gerar boleto</button></td></tr>
+          <tr><td>11/12</td><td>10/12/2026</td><td>R$ 1.250,00</td><td><span class="etiqueta alerta">Em aberto</span></td><td><button class="botao" type="button" data-exemplo="Gerar boleto">Gerar boleto</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<script src="/portal.js"></script>
+</body>
+</html>

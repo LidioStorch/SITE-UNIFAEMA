@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Provas - Portal</title>
+<link rel="stylesheet" href="/tema.css">
+</head>
+<body data-pagina="Provas">
+<main class="conteudo" id="conteudo">
+  <h1>Provas</h1>
+  <div class="duas-colunas">
+    <ul class="lista-opcoes" id="menu-provas"></ul>
+    <section class="painel" id="area">
+      <p class="vazio">Escolha uma disciplina na lista para ver as provas. Dados.</p>
+    </section>
+  </div>
+</main>
+
+<script>
+  // Disciplinas da turma. Edite os nomes aqui para testar ideias.
+  var TURMA = 'DIR 26/1 A NOT/V4';
+  var DISCIPLINAS = [
+    'DIREITO CIVIL - PARTE GERAL',
+    'DIREITO CONSTITUCIONAL - TEORIA CONSTITUCIONAL E DIREITOS FUNDAMENTAIS',
+    'DIREITO PENAL - TEORIA DO CRIME',
+    'METODOLOGIA CIENTÍFICA E DA PESQUISA',
+    'ORATÓRIA E ARGUMENTAÇÃO JURÍDICA',
+    'PSICOLOGIA APLICADA AO DIREITO',
+    'RELAÇÕES INTERPESSOAIS E MULTIPROFISSIONAIS',
+    'TEORIA GERAL DO PROCESSO'
+  ];
+  // [situação, cor da etiqueta, texto do botão]
+  var SITUACOES = [
+    ['Realizada', 'ok', 'Ver prova'],
+    ['Disponível', 'alerta', 'Fazer prova'],
+    ['Não realizada', 'erro', 'Ver prova']
+  ];
+
+  function el(tag, classe, texto) {
+    var e = document.createElement(tag);
+    if (classe) e.className = classe;
+    if (texto !== undefined) e.textContent = texto;
+    return e;
+  }
+
+  var area = document.getElementById('area');
+  var lista = document.getElementById('menu-provas');
+  var itens = [];
+
+  function marcar(li) {
+    itens.forEach(function (i) { i.classList.remove('ativo'); });
+    li.classList.add('ativo');
+  }
+
+  function tabela(cabecalhos, linhas) {
+    var rolagem = el('div', 'tabela-rolagem');
+    var t = el('table');
+    var cab = el('tr');
+    cabecalhos.forEach(function (c) { cab.appendChild(el('th', '', c)); });
+    var thead = el('thead'); thead.appendChild(cab); t.appendChild(thead);
+    var corpo = el('tbody');
+    linhas.forEach(function (l) {
+      var tr = el('tr');
+      l.forEach(function (c) {
+        var td = el('td');
+        if (typeof c === 'string') td.textContent = c; else td.appendChild(c);
+        tr.appendChild(td);
+      });
+      corpo.appendChild(tr);
+    });
+    t.appendChild(corpo);
+    rolagem.appendChild(t);
+    return rolagem;
+  }
+
+  function etiqueta(texto, cor) { return el('span', 'etiqueta ' + cor, texto); }
+
+  function botao(texto, nomeAviso) {
+    var b = el('button', 'botao', texto);
+    b.type = 'button';
+    b.dataset = nomeAviso;
+    return b;
+  }
+
+  function mostrarProvas(nome, n) {
+    area.textContent = '';
+    area.appendChild(el('h2', '', nome));
+    var s1 = SITUACOES[n % 3];
+    var s2 = SITUACOES[(n + 1) % 3];
+    area.appendChild(tabela(
+      ['Prova', 'Abertura', 'Encerramento', 'Situação', 'Ação'],
+      [
+        ['Prova N1', '05/10/2026', '12/10/2026', etiqueta(s1[0], s1[1]), botao(s1[2], 'Prova N1')],
+        ['Prova N2', '23/11/2026', '30/11/2026', etiqueta(s2[0], s2[1]), botao(s2[2], 'Prova N2')],
+        ['Prova substitutiva', '07/12/2026', '10/12/2026', etiqueta('Em breve', 'alerta'), '-']
+      ]
+    ));
+  }
+
+  function mostrarLogs() {
+    area.textContent = '';
+    area.appendChild(el('h2', '', 'Meus logs'));
+    area.appendChild(tabela(
+      ['Data e hora', 'Ação', 'Disciplina'],
+      [
+        ['29/10/2026 20:14', 'Abriu a prova', DISCIPLINAS[1]],
+        ['29/10/2026 20:52', 'Enviou as respostas', DISCIPLINAS[1]],
+        ['12/10/2026 19:03', 'Baixou a prova', DISCIPLINAS[0]],
+        ['05/10/2026 19:40', 'Aceitou o termo da prova', DISCIPLINAS[0]]
+      ]
+    ));
+  }
+
+  var titulo = el('li', 'titulo', 'DIR');
+  lista.appendChild(titulo);
+
+  DISCIPLINAS.forEach(function (nome, i) {
+    var li = el('li', '', nome + ' - ' + TURMA);
+    li.tabIndex = 0;
+    function abrir() { marcar(li); mostrarProvas(nome, i); }
+    li.addEventListener('click', abrir);
+    li.addEventListener('keydown', function (e) { if (e.key === 'Enter') abrir(); });
+    itens.push(li);
+    lista.appendChild(li);
+  });
+
+  var logs = el('li', 'extra', 'Ver meus logs');
+  logs.tabIndex = 0;
+  function abrirLogs() { marcar(logs); mostrarLogs(); }
+  logs.addEventListener('click', abrirLogs);
+  logs.addEventListener('keydown', function (e) { if (e.key === 'Enter') abrirLogs(); });
+  itens.push(logs);
+  lista.appendChild(logs);
+</script>
+<script src="/portal.js"></script>
+</body>
+</html>

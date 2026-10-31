@@ -1,0 +1,39 @@
+SITE UNIFAEMA
+=================================
+
+COMO RODAR (primeira vez)
+1. Instale o Node.js (versão LTS) em nodejs.org. Precisa ser a versão 22 ou mais nova.
+2. Coloque a logo em public/imagens/faema.png (veja o LEIA-ME dentro da pasta).
+3. Abra esta pasta no Antigravity (Arquivo > Abrir Pasta).
+4. Abra o terminal (Terminal > Novo Terminal) e rode, um de cada vez:
+      npm install
+      node server.js
+5. Abra no navegador: http://localhost:3000
+
+LOGINS INICIAIS (criados sozinhos na primeira vez)
+   Aluno ........ usuário: aluno   senha: 123456
+   Admin ........ usuário: admin   senha: admin123
+Troque a senha do admin na página Administração assim que entrar.
+
+ABRIR NO CELULAR (mesma rede Wi-Fi)
+Ao ligar, o terminal mostra uma linha "Na rede: http://192.168.X.X:3000".
+Abra esse endereço no navegador do celular.
+
+ESTRUTURA
+   server.js ........ servidor, banco de dados e login
+   banco.db ......... criado sozinho na primeira vez (guarda os usuários)
+   privado/ ......... páginas que só abrem depois do login
+   public/ .......... login, cores (tema.css), script do menu e imagens
+
+PARA MUDAR AS CORES
+Edite os valores no começo de public/tema.css, salve e recarregue com Ctrl+F5.
+
+PARA CRIAR UMA PÁGINA NOVA DO MENU
+1. Crie o arquivo na pasta privado/ (copie o documentos.html como modelo).
+2. Em server.js, acrescente o nome (sem .html) na lista PAGINAS.
+3. Em public/portal.js, coloque o href do item na lista ITENS.
+4. Reinicie o servidor (Ctrl+C e node server.js).
+
+ANTES DE MOSTRAR PARA OUTRAS PESSOAS
+- Troque a senha do admin e apague o usuário de teste "aluno".
+- Troque a frase "secret" no server.js por uma frase longa e secreta sua.
